@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <script>
+      function sanitize(name) {
+        return name.replace(/\//g, '_')
+      }
+
+      function bytesToMB(bytes) {
+        return (bytes / (1024*1024)).toFixed(2)
+      }
+
+      function loadRepositories() {
+        $.ajax({
+          url: '/v2/_catalog',
+          success: addRepositories
+        })
+      }
+
+      function addRepositories(catalogResult) {
+        catalogResult.repositories.forEach(function (repository) {
+          $('#container').append(
+            $('<div>').attr('class', 'panel panel-default')
+                      .attr('id', 'panel-' + sanitize(repository))
+                      .append(
+                        $('<div>').attr('class', 'panel-heading')
+                                  .append(
+                                    $('<a>').attr('href', '#')
+                                            .click(() => showDetails(repository))
+                                            .append(
+                                              $('<span>').attr('class', 'glyphicon glyphicon-folder-close'),
+                                              $('<span>').text(repository)
+                                            )
+                                  )
+                      )
+          )
+        })
+      }
+
+      function showDetails(repository) {
+	$('#panel-' + sanitize(repository) + ' .panel-heading a').off('click')
+                                                                 .click(() => hideDetails(repository))
+
+        $('#panel-' + sanitize(repository) + ' .panel-heading .glyphicon').attr('class', 'glyphicon glyphicon-folder-open')
+
+        $('#panel-' + sanitize(repository)).append(
+          $('<ul>').attr('class', 'list-group')
+        )
+
+        $.ajax({
+          url: '/v2/' + repository + '/tags/list',
+          success: addTags
+        })
+      }
+
+      function hideDetails(repository) {
+	$('#panel-' + sanitize(repository) + ' .panel-heading a').off('click')
+                                                                 .click(() => showDetails(repository))
+
+        $('#panel-' + sanitize(repository) + ' .panel-heading .glyphicon').attr('class', 'glyphicon glyphicon-folder-close')
+
+        $('#panel-' + sanitize(repository) + ' .list-group').remove()
+      }
+
+      function addTags(tagslist) {
+        tagslist.tags.forEach(function (tag) {
+          $('#panel-' + sanitize(tagslist.name) + ' .list-group').append(
+            $('<li>').attr('class', 'list-group-item tag')
+                     .attr('id', 'tag-' + sanitize(tagslist.name) + '-' + tag)
+                     .append(
+                       $('<span>').attr('class', 'glyphicon glyphicon-tag'),
+                       $('<span>').text(tag),
+                       $('<span>').attr('class', 'glyphicon glyphicon-download-alt'),
+                       $('<code>').text('docker pull https://' + document.location.hostname + '/' + tagslist.name + ':' + tag)
+                     )
+          )
+
+          $.ajax({
+            url: '/v2/' + tagslist.name + '/manifests/' + tag,
+            headers: {Accept: 'application/vnd.docker.distribution.manifest.v2+json'},
+            success: (manifest) => addManifest(tagslist.name, tag, manifest)
+          })
+        })
+      }
+
+      function addManifest(repository, tag, manifest) {
+        var size = 0;
+        manifest.layers.forEach((layer) => size += layer.size)
+        $('#tag-' + sanitize(repository) + '-' + sanitize(tag)).append(
+          $('<span>').attr('class', 'glyphicon glyphicon-tasks'),
+          $('<span>').text(manifest.layers.length + ' layers'),
+          $('<span>').attr('class', 'glyphicon glyphicon-compressed'),
+          $('<span>').text(bytesToMB(size) + ' MB')
+        )
+      }
+
+      $(loadRepositories)
+      $(() => $('h1').text(document.location.hostname))
+    </script>
+    <style>
+      span.glyphicon {
+        margin: 4px;
+      }
+
+      li.tag .glyphicon {
+        margin-left: 40px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class='container' id='container'>
+      <h1>Repository</h1>
+    </div>
+  </body>
+</html>
