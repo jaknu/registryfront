@@ -1,118 +1,103 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-
-    <script>
-      function sanitize(name) {
-        return name.replace(/\//g, '_')
-      }
-
-      function bytesToMB(bytes) {
-        return (bytes / (1024*1024)).toFixed(2)
-      }
-
-      function loadRepositories() {
-        $.ajax({
-          url: '/v2/_catalog',
-          success: addRepositories
-        })
-      }
-
-      function addRepositories(catalogResult) {
-        catalogResult.repositories.forEach(function (repository) {
-          $('#container').append(
-            $('<div>').attr('class', 'panel panel-default')
-                      .attr('id', 'panel-' + sanitize(repository))
-                      .append(
-                        $('<div>').attr('class', 'panel-heading')
-                                  .append(
-                                    $('<a>').attr('href', '#')
-                                            .click(() => showDetails(repository))
-                                            .append(
-                                              $('<span>').attr('class', 'glyphicon glyphicon-folder-close'),
-                                              $('<span>').text(repository)
-                                            )
-                                  )
-                      )
-          )
-        })
-      }
-
-      function showDetails(repository) {
-	$('#panel-' + sanitize(repository) + ' .panel-heading a').off('click')
-                                                                 .click(() => hideDetails(repository))
-
-        $('#panel-' + sanitize(repository) + ' .panel-heading .glyphicon').attr('class', 'glyphicon glyphicon-folder-open')
-
-        $('#panel-' + sanitize(repository)).append(
-          $('<ul>').attr('class', 'list-group')
-        )
-
-        $.ajax({
-          url: '/v2/' + repository + '/tags/list',
-          success: addTags
-        })
-      }
-
-      function hideDetails(repository) {
-	$('#panel-' + sanitize(repository) + ' .panel-heading a').off('click')
-                                                                 .click(() => showDetails(repository))
-
-        $('#panel-' + sanitize(repository) + ' .panel-heading .glyphicon').attr('class', 'glyphicon glyphicon-folder-close')
-
-        $('#panel-' + sanitize(repository) + ' .list-group').remove()
-      }
-
-      function addTags(tagslist) {
-        tagslist.tags.forEach(function (tag) {
-          $('#panel-' + sanitize(tagslist.name) + ' .list-group').append(
-            $('<li>').attr('class', 'list-group-item tag')
-                     .attr('id', 'tag-' + sanitize(tagslist.name) + '-' + tag)
-                     .append(
-                       $('<span>').attr('class', 'glyphicon glyphicon-tag'),
-                       $('<span>').text(tag),
-                       $('<span>').attr('class', 'glyphicon glyphicon-download-alt'),
-                       $('<code>').text('docker pull https://' + document.location.hostname + '/' + tagslist.name + ':' + tag)
-                     )
-          )
-
-          $.ajax({
-            url: '/v2/' + tagslist.name + '/manifests/' + tag,
-            headers: {Accept: 'application/vnd.docker.distribution.manifest.v2+json'},
-            success: (manifest) => addManifest(tagslist.name, tag, manifest)
-          })
-        })
-      }
-
-      function addManifest(repository, tag, manifest) {
-        var size = 0;
-        manifest.layers.forEach((layer) => size += layer.size)
-        $('#tag-' + sanitize(repository) + '-' + sanitize(tag)).append(
-          $('<span>').attr('class', 'glyphicon glyphicon-tasks'),
-          $('<span>').text(manifest.layers.length + ' layers'),
-          $('<span>').attr('class', 'glyphicon glyphicon-compressed'),
-          $('<span>').text(bytesToMB(size) + ' MB')
-        )
-      }
-
-      $(loadRepositories)
-      $(() => $('h1').text(document.location.hostname))
-    </script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <style>
-      span.glyphicon {
-        margin: 4px;
-      }
-
-      li.tag .glyphicon {
-        margin-left: 40px;
-      }
+      .glyphicon { margin: 4px; }
+      .manifest .glyphicon { margin-left: 40px; }
+      .repository .panel-heading { cursor: pointer; }
     </style>
   </head>
+
   <body>
-    <div class='container' id='container'>
-      <h1>Repository</h1>
+    <div class='container' id='app'>
+      <h1>{{ host }}</h1>
+      <rf-repository  v-for='repository in repositories' :repository="repository"></rf-repository>
     </div>
   </body>
+
+  <script type="text/x-template" id="repository-template">
+    <div class="panel panel-default repository">
+      <div v-on:click="toggleOpen" class="panel-heading">
+        <span :class="'glyphicon glyphicon-folder-' + (open ? 'open' : 'close')"></span> {{ repository }}
+      </div>
+      <div class="list-group">
+        <rf-manifest v-for="tag in tags" :repository="repository" :tag="tag"></rf-manifest>
+      </div>
+    </div>
+  </script>
+
+  <script type="text/x-template" id="manifest-template">
+    <div class="list-group-item manifest">
+      <span class="glyphicon glyphicon-tag"></span> {{ tag }}
+      <span v-if="layercount > 0">
+        <span class="glyphicon glyphicon-th-list"></span> {{ layercount }} layers
+        <span class="glyphicon glyphicon-compressed"></span> {{ size | bytestomb }} MB
+      </span>
+    </div>
+  </script>
+
+  <script>
+    Vue.filter('bytestomb', function (value) {
+      return (value / 1000000).toFixed(2)
+    })
+
+    Vue.component('rf-repository', {
+      props: ['repository'],
+      data: function () { return {
+        tags: [] ,
+      }},
+      computed: {
+        open: function () { return this.tags.length > 0 }
+      },
+      template: '#repository-template',
+      methods: {
+        toggleOpen: function () {
+          if (this.open) {
+            this.tags = []
+          }else {
+            axios.get('/v2/' + this.repository + '/tags/list').then((res) => {
+              this.tags = res.data.tags
+            })
+          }
+        }
+      }
+    })
+
+    Vue.component('rf-manifest', {
+      props: ['repository', 'tag'],
+      data: function () { return { layers: [] }},
+      computed: {
+        layercount: function () { return this.layers.length },
+        size: function () { return this.layers.reduce((accumulator, layer) => { return accumulator + layer.size }, 0) }
+      },
+      template: '#manifest-template',
+      created: function () {
+        axios.get('/v2/' + this.repository + '/manifests/' + this.tag, {
+          headers: { Accept: 'application/vnd.docker.distribution.manifest.v2+json' }
+        }).then((res) => {
+          this.layers = res.data.layers
+        })
+      }
+    })
+
+    var app = new Vue({
+      el: '#app',
+      data: {
+        host: document.location.hostname,
+        repositories: []
+      },
+      methods: {
+        loadRepositories: function () {
+          axios.get('/v2/_catalog').then((res) => {
+            this.repositories = res.data.repositories
+          })
+        }
+      }
+    })
+
+    app.loadRepositories()
+  </script>
 </html>
