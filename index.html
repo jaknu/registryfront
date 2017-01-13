@@ -6,7 +6,7 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <style>
       .glyphicon { margin: 4px; }
-      .manifest .glyphicon { margin-left: 40px; }
+      .list-group .glyphicon { margin-left: 40px; }
       .repository .panel-heading { cursor: pointer; }
     </style>
   </head>
@@ -24,16 +24,17 @@
         <span :class="'glyphicon glyphicon-folder-' + (open ? 'open' : 'close')"></span> {{ repository }}
       </div>
       <div class="list-group">
+        <div v-if="open && tags == null" class="list-group-item"><span class="glyphicon glyphicon-info-sign"></span>Repository contains no tags</div>
         <rf-manifest v-for="tag in tags" :repository="repository" :tag="tag"></rf-manifest>
       </div>
     </div>
   </script>
 
   <script type="text/x-template" id="manifest-template">
-    <div class="list-group-item manifest">
+    <div class="list-group-item">
       <span class="glyphicon glyphicon-tag"></span> {{ tag }}
       <span v-if="layercount > 0">
-        <span class="glyphicon glyphicon-th-list"></span> {{ layercount }} layers
+        <span class="glyphicon glyphicon-list"></span> {{ layercount }} layers
         <span class="glyphicon glyphicon-compressed"></span> {{ size | bytestomb }} MB
       </span>
     </div>
@@ -47,16 +48,16 @@
     Vue.component('rf-repository', {
       props: ['repository'],
       data: function () { return {
-        tags: [] ,
+        tags: undefined
       }},
       computed: {
-        open: function () { return this.tags.length > 0 }
+        open: function () { return this.tags !== undefined }
       },
       template: '#repository-template',
       methods: {
         toggleOpen: function () {
           if (this.open) {
-            this.tags = []
+            this.tags = undefined
           }else {
             axios.get('/v2/' + this.repository + '/tags/list').then((res) => {
               this.tags = res.data.tags
