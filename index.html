@@ -4,11 +4,6 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://unpkg.com/vue/dist/vue.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <style>
-      .glyphicon { margin: 4px; }
-      .list-group .glyphicon { margin-left: 40px; }
-      .repository .panel-heading { cursor: pointer; }
-    </style>
   </head>
 
   <body>
@@ -19,28 +14,32 @@
   </body>
 
   <script type="text/x-template" id="repository-template">
-    <div class="panel panel-default repository">
-      <div v-on:click="toggleOpen" class="panel-heading">
-        <span :class="'glyphicon glyphicon-folder-' + (open ? 'open' : 'close')"></span> {{ repository }}
+    <div class="panel panel-default container-fluid">
+      <div class="panel-heading row">
+        <div v-if="opened" class="col-xs-6"><span class="glyphicon glyphicon-folder-open"></span> {{ repository }}</div>
+        <div v-else class="col-xs-6"><span class="glyphicon glyphicon-folder-close"></span> {{ repository }}</div>
+        <div class="col-xs-6 text-right">
+          <a v-if="opened" v-on:click="close" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-chevron-up"></span></a>
+          <a v-else v-on:click="open" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-chevron-down"></span></a>
+        </div>
       </div>
-      <div class="list-group">
-        <div v-if="open && tags == null" class="list-group-item"><span class="glyphicon glyphicon-info-sign"></span>Repository contains no tags</div>
-        <rf-manifest v-for="tag in tags" :repository="repository" :tag="tag"></rf-manifest>
+      <div v-if="opened" class="list-group">
+        <div v-if="!loaded" class="list-group-item">Loading</div>
+        <div v-if="loaded && manifests.length == 0" class="list-group-item">Empty</div>
+        <div v-for="manifest in manifests" class="list-group-item row">
+          <div class="col-xs-4"><span v-for="tag in manifest.tags" class="badge"><span class="glyphicon glyphicon-tag"></span> {{ tag }}</span></div>
+          <div class="col-xs-4"><span class="glyphicon glyphicon-list"></span> {{ manifest.layers.length }} layers</div>
+          <div class="col-xs-4"><span class="glyphicon glyphicon-compressed"></span> {{ manifest.size | bytestomb }} MB</div>
+        </div>
       </div>
     </div>
   </script>
 
   <script type="text/x-template" id="manifest-template">
-    <div class="list-group-item">
-      <span class="glyphicon glyphicon-tag"></span> {{ tag }}
-      <span v-if="layercount > 0">
-        <span class="glyphicon glyphicon-list"></span> {{ layercount }} layers
-        <span class="glyphicon glyphicon-compressed"></span> {{ size | bytestomb }} MB
-      </span>
-    </div>
   </script>
 
   <script>
+
     Vue.filter('bytestomb', function (value) {
       return (value / 1000000).toFixed(2)
     })
@@ -48,39 +47,57 @@
     Vue.component('rf-repository', {
       props: ['repository'],
       data: function () { return {
-        tags: undefined
+        opened: false,
+        loaded: false,
+        pendingRequests: 0,
+        manifests: []
       }},
-      computed: {
-        open: function () { return this.tags !== undefined }
-      },
       template: '#repository-template',
       methods: {
-        toggleOpen: function () {
-          if (this.open) {
-            this.tags = undefined
-          }else {
-            axios.get('/v2/' + this.repository + '/tags/list').then((res) => {
-              this.tags = res.data.tags
-            })
-          }
-        }
-      }
-    })
 
-    Vue.component('rf-manifest', {
-      props: ['repository', 'tag'],
-      data: function () { return { layers: [] }},
-      computed: {
-        layercount: function () { return this.layers.length },
-        size: function () { return this.layers.reduce((accumulator, layer) => { return accumulator + layer.size }, 0) }
-      },
-      template: '#manifest-template',
-      created: function () {
-        axios.get('/v2/' + this.repository + '/manifests/' + this.tag, {
-          headers: { Accept: 'application/vnd.docker.distribution.manifest.v2+json' }
-        }).then((res) => {
-          this.layers = res.data.layers
-        })
+        open: function () {
+          this.opened = true
+          this.pendingRequests = 1
+          axios.get('/v2/' + this.repository + '/tags/list').then((res) => {
+            if (res.data.tags == null) {
+              this.pendingRequests = 0
+              this.loaded = true
+              return
+            }
+            var manifestsByDigest = {}
+            this.pendingRequests = res.data.tags.length
+            res.data.tags.forEach((tag) => {
+              axios.get('/v2/' + this.repository + '/manifests/' + tag, {
+                headers: {
+                  'accept': 'application/vnd.docker.distribution.manifest.v2+json',
+                  'if-none-match': null
+                }
+              }).then((res) => {
+                console.log(res)
+                var digest = res.headers['docker-content-digest']
+                manifestsByDigest[digest] = manifestsByDigest[digest] || {
+                  digest: digest,
+                  tags: [],
+                  layers: res.data.layers,
+                  size: res.data.layers.reduce((a, l) => { return a + l.size }, 0)
+                }
+                manifestsByDigest[digest].tags.push(tag)
+                
+                if (--this.pendingRequests <= 0) {
+                  for (digest in manifestsByDigest) { this.manifests.push(manifestsByDigest[digest]) }
+                  this.loaded = true
+                }
+              })
+            })
+          })
+        },
+
+        close: function () {
+          this.opened = false
+          this.loaded = false
+          this.manifests = []
+        }
+
       }
     })
 
