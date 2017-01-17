@@ -26,7 +26,6 @@
       <div v-if="opened" class="list-group">
         <div v-if="!loaded" class="list-group-item">Loading</div>
         <div v-if="loaded && manifests.length == 0" class="list-group-item">Empty</div>
-
         <rf-manifest v-for="manifest in manifests" :manifest="manifest"></rf-manifest>
       </div>
     </div>
