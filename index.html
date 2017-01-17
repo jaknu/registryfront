@@ -16,21 +16,21 @@
   <script type="text/x-template" id="repository-template">
     <div class="panel panel-default container-fluid">
       <div class="panel-heading row">
-        <div v-if="opened" class="col-xs-6"><span class="glyphicon glyphicon-folder-open"></span> {{ repository }}</div>
-        <div v-else class="col-xs-6"><span class="glyphicon glyphicon-folder-close"></span> {{ repository }}</div>
+        <div v-if="opened" class="col-xs-6"><rf-glyph icon="folder-open"></rf-glyph> {{ repository }}</div>
+        <div v-else class="col-xs-6"><rf-glyph icon="folder-close"></rf-glyph> {{ repository }}</div>
         <div class="col-xs-6 text-right">
-          <a v-if="opened" v-on:click="close" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-chevron-up"></span></a>
-          <a v-else v-on:click="open" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-chevron-down"></span></a>
+          <a v-if="opened" v-on:click="close" class="btn btn-xs btn-default"><rf-glyph icon="chevron-up"></glyph></a>
+          <a v-else v-on:click="open" class="btn btn-xs btn-default"><rf-glyph icon="chevron-down"></glyph></a>
         </div>
       </div>
       <div v-if="opened" class="list-group">
         <div v-if="!loaded" class="list-group-item">Loading</div>
         <div v-if="loaded && manifests.length == 0" class="list-group-item">Empty</div>
         <div v-for="manifest in manifests" class="list-group-item row">
-          <div class="col-xs-3"><span v-for="tag in manifest.tags" class="badge"><span class="glyphicon glyphicon-tag"></span> {{ tag }}</span></div>
-          <div class="col-xs-3"><span class="glyphicon glyphicon-list"></span> {{ manifest.layers.length }} layers</div>
-          <div class="col-xs-3"><span class="glyphicon glyphicon-compressed"></span> {{ manifest.size | bytestomb }} MB</div>
-          <div class="col-xs-3 text-right"><a v-on:click="removeManifest(manifest.digest)" class="btn btn-xs btn-danger"><span class="glyphicon glyphicon-erase"></span></a></div>
+          <div class="col-xs-3"><span v-for="tag in manifest.tags" class="badge"><rf-glyph ison="tag"></rf-glyph> {{ tag }}</span></div>
+          <div class="col-xs-3"><rf-glyph icon="list"></rf-glyph> {{ manifest.layers.length }} layers</div>
+          <div class="col-xs-3"><rf-glyph icon="compressed"></rf-glyph> {{ manifest.size | bytestomb }} MB</div>
+          <div class="col-xs-3 text-right"><a v-on:click="removeManifest(manifest.digest)" class="btn btn-xs btn-danger"><rf-glyph icon="erase"></rf-glyph></a></div>
         </div>
       </div>
     </div>
@@ -39,6 +39,11 @@
   <script>
     Vue.filter('bytestomb', function (value) {
       return (value / 1000000).toFixed(2)
+    })
+
+    Vue.component('rf-glyph', {
+      props: ['icon'],
+      template: '<span :class="\'glyphicon glyphicon-\' + icon"></span>'
     })
 
     Vue.component('rf-repository', {
