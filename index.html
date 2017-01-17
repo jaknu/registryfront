@@ -92,7 +92,6 @@
                   'if-none-match': null
                 }
               }).then((res) => {
-                console.log(res)
                 var digest = res.headers['docker-content-digest']
                 manifestsByDigest[digest] = manifestsByDigest[digest] || {
                   digest: digest,
