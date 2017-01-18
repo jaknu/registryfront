@@ -20,7 +20,7 @@
         <div v-else class="col-xs-6"><rf-glyph icon="folder-close"></rf-glyph> {{ repository }}</div>
         <div class="col-xs-6 text-right">
           <a v-if="opened" v-on:click="close" class="btn btn-xs btn-default"><rf-glyph icon="chevron-up"></glyph></a>
-          <a v-else v-on:click="open" class="btn btn-xs btn-default"><rf-glyph icon="chevron-down"></glyph></a>
+          <a v-else v-on:click="open" class="btn btn-xs btn-default"><rf-glyph icon="chevron-down"></rf-glyph></a>
         </div>
       </div>
       <div v-if="opened" class="list-group">
