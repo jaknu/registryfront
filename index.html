@@ -19,14 +19,14 @@
         <div v-if="opened" class="col-xs-6"><rf-glyph icon="folder-open"></rf-glyph> {{ repository }}</div>
         <div v-else class="col-xs-6"><rf-glyph icon="folder-close"></rf-glyph> {{ repository }}</div>
         <div class="col-xs-6 text-right">
-          <a v-if="opened" v-on:click="close" class="btn btn-xs btn-default"><rf-glyph icon="chevron-up"></glyph></a>
-          <a v-else v-on:click="open" class="btn btn-xs btn-default"><rf-glyph icon="chevron-down"></rf-glyph></a>
+          <rf-glyphbutton v-if="opened" :click="close" look="default" icon="chevron-up"></rf-glyphbutton>
+          <rf-glyphbutton v-else :click="load" look="default" icon="chevron-down"></rf-glyphbutton>
         </div>
       </div>
       <div v-if="opened" class="list-group">
         <div v-if="!loaded" class="list-group-item">Loading</div>
         <div v-if="loaded && manifests.length == 0" class="list-group-item">Empty</div>
-        <rf-manifest v-for="manifest in manifests" :manifest="manifest"></rf-manifest>
+        <rf-manifest v-for="manifest in manifests" :manifest="manifest" :repository="repository" v-on:deleted="load"></rf-manifest>
       </div>
     </div>
   </script>
@@ -43,7 +43,7 @@
         <rf-glyph icon="compressed"></rf-glyph> {{ manifest.size | bytestomb }} MB
       </div>
       <div class="col-xs-3 text-right">
-        <a v-on:click="removeManifest(manifest.digest)" class="btn btn-xs btn-danger"><rf-glyph icon="erase"></rf-glyph></a>
+        <rf-glyphbutton :click="remove" look="danger" icon="erase"></rf-glyphbutton>
       </div>
     </div>
   </script>
@@ -58,9 +58,21 @@
       template: '<span :class="\'glyphicon glyphicon-\' + icon"></span>'
     })
 
+    Vue.component('rf-glyphbutton', {
+      props: ['icon', 'look', 'click'],
+      template: '<a v-on:click="click" :class="\'btn btn-xs btn-\' + look"><rf-glyph :icon="icon"></rf-icon><slot></slot></a>'
+    })
+
     Vue.component('rf-manifest', {
-      props: ['manifest'],
-      template: '#manifest-template'
+      props: ['manifest', 'repository'],
+      template: '#manifest-template',
+      methods: {
+        remove: function() {
+          axios.delete('/v2/' + this.repository + '/manifests/' + this.manifest.digest).then((res) => {
+            this.$emit('deleted')
+          })
+        }
+      }
     })
 
     Vue.component('rf-repository', {
@@ -74,7 +86,9 @@
       template: '#repository-template',
       methods: {
 
-        open: function () {
+        load: function () {
+          this.manifests = []
+          this.loaded = false
           this.opened = true
           this.pendingRequests = 1
           axios.get('/v2/' + this.repository + '/tags/list').then((res) => {
@@ -114,12 +128,6 @@
           this.opened = false
           this.loaded = false
           this.manifests = []
-        },
-
-        removeManifest: function(digest) {
-          axios.delete('/v2/' + this.repository + '/manifests/' + digest).then((res) => {
-            this.manifests = this.manifests.filter((m) => { return m.digest != digest })
-          })
         }
 
       }
