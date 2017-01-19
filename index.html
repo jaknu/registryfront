@@ -34,17 +34,17 @@
   <script type="text/x-template" id="manifest-template">
     <div class="list-group-item">
       <div class="row">
-        <div class="col-xs-3">
+        <div class="col-xs-4">
           <span v-for="tag in manifest.tags" class="badge"><rf-glyph icon="tag"></rf-glyph> {{ tag }}</span>
         </div>
-        <div class="col-xs-3">
+        <div class="col-xs-2">
           <rf-glyph icon="list"></rf-glyph> {{ manifest.layers.length }} layers
         </div>
-        <div class="col-xs-3">
+        <div class="col-xs-2">
           <rf-glyph icon="compressed"></rf-glyph> {{ manifest.size | bytestomb }} MB
         </div>
-        <div class="col-xs-3 text-right">
-          <rf-glyphbutton :click="remove" look="danger" icon="erase"></rf-glyphbutton>
+        <div class="col-xs-4 text-right">
+          <rf-warningglyphbutton :click="remove" look="danger" icon="erase" warning="Really remove this image?"></rf-warningglyphbutton>
         </div>
       </div>
     </div>
@@ -54,6 +54,15 @@
     <a v-on:click="click" :class="'btn btn-xs btn-' + look">
       <rf-glyph :icon="icon"></rf-glyph><slot></slot>
     </a>
+  </script>
+ 
+  <script type="text/x-template" id="warningglyphbutton-template">
+    <span>
+      <div v-if="requested" :class="'label label-' + look"><rf-glyph icon :icon="icon"></rf-glyph> {{ warning }}</div>
+      <rf-glyphbutton v-if="requested" :click="confirm" icon="ok" :look="look"></rf-glyphbutton>
+      <rf-glyphbutton v-if="requested" :click="cancel" icon="remove" :look="look"></rf-glyphbutton>
+      <rf-glyphbutton v-if="!requested" :click="request" :icon="icon" :look="look"></rf-glyphbutton>
+    </span>
   </script>
 
   <script>
@@ -73,6 +82,31 @@
         click: { type: Function, required: true }
       },
       template: '#glyphbutton-template'
+    })
+
+    Vue.component('rf-warningglyphbutton', {
+      props: {
+        icon: { type: String, required: true },
+        look: { type: String, default: 'default' },
+        click: { type: Function, required: true },
+        warning: { type: String, default: 'Are you sure?' }
+      },
+      data: function () { return {
+        requested: false
+      }},
+      methods: {
+        request: function () {
+          this.requested = true 
+        },
+        confirm: function () {
+          this.click()
+          this.requested = false
+        },
+        cancel: function () {
+          this.requested = false
+        }
+      },
+      template: '#warningglyphbutton-template'
     })
 
     Vue.component('rf-manifest', {
