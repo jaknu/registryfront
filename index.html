@@ -34,8 +34,8 @@
       </div>
       <div v-if="opened" class="list-group">
         <div v-if="!loaded" class="list-group-item"><rf-glyph icon="hourglass"></rf-glyph> Loading manifests</div>
-        <div v-if="loaded && manifests.length == 0" class="list-group-item"><rf-glyph icon="info-sign"></rf-glyph> No manifests in repository</div>
-        <rf-manifest v-for="manifest in manifests" v-if="!isManifestFiltered(manifest)" :manifest="manifest" :repository="repository" v-on:deleted="load"></rf-manifest>
+        <div v-if="loaded && filteredManifests.length == 0" class="list-group-item"><rf-glyph icon="info-sign"></rf-glyph> Nothing to show</div>
+        <rf-manifest v-for="manifest in filteredManifests" :manifest="manifest" :repository="repository" v-on:deleted="load"></rf-manifest>
       </div>
     </div>
   </script>
@@ -148,6 +148,14 @@
           } catch (e) {
             return false
           }
+        },
+        filteredManifests: function () {
+          if (!this.tagfilterIsValid) {
+            return []
+          }
+
+          var re = new RegExp(this.tagfilter)
+          return this.manifests.filter((m) => { return m.tags.some((t) => Boolean(t.match(re))) })
         }
       },
       template: '#repository-template',
@@ -203,15 +211,6 @@
           } else {
             this.load()
           }
-        },
-
-        isManifestFiltered: function (manifest) {
-          if (!this.tagfilterIsValid) {
-            return false
-          }
-
-          var re = new RegExp(this.tagfilter)
-          return !manifest.tags.some((t) => t.match(re))
         }
 
       }
