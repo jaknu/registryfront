@@ -19,6 +19,7 @@
         <div class="row">
           <div class="col-xs-6"><rf-glyph :icon="opened ? 'folder-open' : 'folder-close'"></rf-glyph> {{ repository }}</div>
           <div class="col-xs-6 text-right">
+            <rf-glyphbutton v-if="loaded" :click="load" icon="refresh"></rf-glyphbutton>
             <rf-glyphbutton :click="toggle" :icon="opened ? 'chevron-up' : 'chevron-down'"></rf-glyphbutton>
           </div>
         </div>
