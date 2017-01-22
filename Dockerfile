@@ -1,5 +1,2 @@
-FROM nginx
-
-COPY . /registryfront
-
-CMD ["sh", "/registryfront/run.sh"]
+FROM joshix/caddy
+COPY . /var/www/html/

@@ -1,0 +1,8 @@
+{$RF_HOSTNAME}:80, {$RF_HOSTNAME}:443 {
+  log stdout
+  errors stdout
+
+  proxy /v1 {$RF_REGISTRY_IP}:{$RF_REGISTRY_PORT} { transparent }
+  proxy /v2 {$RF_REGISTRY_IP}:{$RF_REGISTRY_PORT} { transparent }
+}
+
