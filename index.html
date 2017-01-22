@@ -5,12 +5,15 @@
     <script src="https://unpkg.com/vue/dist/vue.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <style>
-      body { padding: 20px }
+      .navbar { margin-top: 20px }
+      .input-group-xs input { font-size: 12px ; height: 24px }
+      .input-group-xs.has-feedback input { padding-right: 30px }
+      .input-group-xs .form-control-feedback { font-size: 12px ; color: #333 ; width: 24px ; height: 24px ; line-height: 2.2 }
     </style>
   </head>
 
   <body>
-    <div class='container' id='app'>
+    <div class="container" id='app'>
       <div class="navbar navbar-default">
         <div class="container-fluid">
           <div class="navbar-header navbar-brand"><rf-glyph icon="book"></rf-glyph> {{ host }}</div>
@@ -22,24 +25,22 @@
       </div>
       <rf-repository  v-for='repository in filteredRepositories' :repository="repository"></rf-repository>
       <div v-if="filteredRepositories.length == 0" class="panel panel-default">
-        <div class="panel-body"><rf-glyph icon="info-sign"></rf-glyph> Nothing to show</div>
+        <div class="panel-body"><rf-glyph icon="info-sign"></rf-glyph> No repositories</div>
       </div>
     </div>
   </body>
 
   <script type="text/x-template" id="repository-template">
     <div class="panel panel-default">
-      <div class="panel-heading">
+      <div class="panel-heading panel-title">
         <div class="row">
           <div class="col-xs-4"><rf-glyph :icon="opened ? 'folder-open' : 'folder-close'"></rf-glyph> {{ repository }}</div>
           <div class="col-xs-8 text-right">
-
             <form class="form-inline">
-              <rf-filterinput v-if="loaded" v-model="tagfilter" icon="tag"></rf-filterinput>
-              <rf-glyphbutton v-if="loaded" :click="load" icon="refresh" size="sm"></rf-glyphbutton>
-              <rf-glyphbutton :click="toggle" :icon="opened ? 'chevron-up' : 'chevron-down'" size="sm"></rf-glyphbutton>
+              <rf-filterinput v-if="loaded" v-model="tagfilter" icon="tag" size="xs"></rf-filterinput>
+              <rf-glyphbutton v-if="loaded" :click="load" icon="refresh" size="xs"></rf-glyphbutton>
+              <rf-glyphbutton :click="toggle" :icon="opened ? 'chevron-up' : 'chevron-down'" size="xs"></rf-glyphbutton>
             </form>
-
           </div>
         </div>
       </div>
@@ -71,8 +72,8 @@
   </script>
 
   <script type="text/x-template" id="filterinput-template">
-    <div :class="'input-group has-feedback ' + (valid ? '' : 'has-error')">
-      <input :value="value" v-on:input="$emit('input', $event.target.value)" type="text" class="form-control">
+    <div :class="'input-group input-group-' + size + ' has-feedback ' + (valid ? '' : 'has-error')">
+      <input :value="value" v-on:input="$emit('input', $event.target.value)" type="text" class="form-control" placeholder="regexp">
       <span :class="'glyphicon form-control-feedback glyphicon-' + icon"></span>
     </div>
   </script>
@@ -105,7 +106,8 @@
     Vue.component('rf-filterinput', {
       props: {
         value: { type: String },
-        icon: { type: String, default: 'filter' }
+        icon: { type: String, default: 'filter' },
+        size: { type: String }
       },
       computed: {
         valid: function () {
@@ -188,7 +190,6 @@
       },
       template: '#repository-template',
       methods: {
-
         load: function () {
           this.manifests = []
           this.loaded = false
@@ -217,7 +218,6 @@
                   size: res.data.layers.reduce((a, l) => { return a + l.size }, 0)
                 }
                 manifestsByDigest[digest].tags.push(tag)
-                
                 if (--this.pendingRequests <= 0) {
                   for (digest in manifestsByDigest) { this.manifests.push(manifestsByDigest[digest]) }
                   this.loaded = true
@@ -226,13 +226,11 @@
             })
           })
         },
-
         close: function () {
           this.opened = false
           this.loaded = false
           this.manifests = []
         },
-
         toggle: function () {
           if (this.opened) {
             this.close()
@@ -240,7 +238,6 @@
             this.load()
           }
         }
-
       }
     })
 
