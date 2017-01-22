@@ -4,12 +4,26 @@
     <link rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css">
     <script src="https://unpkg.com/vue/dist/vue.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+      body { padding: 20px }
+    </style>
   </head>
 
   <body>
     <div class='container' id='app'>
-      <h1>{{ host }}</h1>
-      <rf-repository  v-for='repository in repositories' :repository="repository"></rf-repository>
+      <div class="navbar navbar-default">
+        <div class="container-fluid">
+          <div class="navbar-header navbar-brand"><rf-glyph icon="book"></rf-glyph> {{ host }}</div>
+          <form class="navbar-form navbar-right">
+            <rf-filterinput v-model="repositoryFilter" icon="folder-close"></rf-filterinput>
+            <rf-glyphbutton :click="loadRepositories" icon="refresh"></rf-glyphbutton>
+          </form>
+        </div>
+      </div>
+      <rf-repository  v-for='repository in filteredRepositories' :repository="repository"></rf-repository>
+      <div v-if="filteredRepositories.length == 0" class="panel panel-default">
+        <div class="panel-body"><rf-glyph icon="info-sign"></rf-glyph> Nothing to show</div>
+      </div>
     </div>
   </body>
 
@@ -21,10 +35,7 @@
           <div class="col-xs-8 text-right">
 
             <form class="form-inline">
-              <div v-if="loaded" :class="'input-group input-group-sm has-feedback ' + (tagfilterIsValid ? '' : 'has-error')">
-                <input v-model="tagfilter" type="text" class="form-control">
-                <span class="glyphicon glyphicon-filter form-control-feedback"></span>
-              </div>
+              <rf-filterinput v-if="loaded" v-model="tagfilter" icon="tag"></rf-filterinput>
               <rf-glyphbutton v-if="loaded" :click="load" icon="refresh" size="sm"></rf-glyphbutton>
               <rf-glyphbutton :click="toggle" :icon="opened ? 'chevron-up' : 'chevron-down'" size="sm"></rf-glyphbutton>
             </form>
@@ -59,6 +70,13 @@
     </div>
   </script>
 
+  <script type="text/x-template" id="filterinput-template">
+    <div :class="'input-group has-feedback ' + (valid ? '' : 'has-error')">
+      <input :value="value" v-on:input="$emit('input', $event.target.value)" type="text" class="form-control">
+      <span :class="'glyphicon form-control-feedback glyphicon-' + icon"></span>
+    </div>
+  </script>
+
   <script type="text/x-template" id="glyphbutton-template">
     <a v-on:click="click" :class="'btn btn-' + size + ' btn-' + look">
       <rf-glyph :icon="icon"></rf-glyph><slot></slot>
@@ -68,9 +86,9 @@
   <script type="text/x-template" id="warningglyphbutton-template">
     <span>
       <div v-if="requested" :class="'label label-' + look"><rf-glyph icon :icon="icon"></rf-glyph> {{ warning }}</div>
-      <rf-glyphbutton v-if="requested" :click="confirm" icon="ok" :look="look"></rf-glyphbutton>
-      <rf-glyphbutton v-if="requested" :click="cancel" icon="remove" :look="look"></rf-glyphbutton>
-      <rf-glyphbutton v-if="!requested" :click="request" :icon="icon" :look="look"></rf-glyphbutton>
+      <rf-glyphbutton v-if="requested" :click="confirm" icon="ok" :look="look" size="xs"></rf-glyphbutton>
+      <rf-glyphbutton v-if="requested" :click="cancel" icon="remove" :look="look" size="xs"></rf-glyphbutton>
+      <rf-glyphbutton v-if="!requested" :click="request" :icon="icon" :look="look" size="xs"></rf-glyphbutton>
     </span>
   </script>
 
@@ -84,12 +102,30 @@
       template: '<span :class="\'glyphicon glyphicon-\' + icon"></span>'
     })
 
+    Vue.component('rf-filterinput', {
+      props: {
+        value: { type: String },
+        icon: { type: String, default: 'filter' }
+      },
+      computed: {
+        valid: function () {
+          try {
+            new RegExp(this.value)
+            return true
+          } catch (e) {
+            return false
+          }
+        }
+      },
+      template: '#filterinput-template'
+    })
+
     Vue.component('rf-glyphbutton', {
       props: {
         icon: { type: String, required: true },
         look: { type: String, default: 'default' },
         click: { type: Function, required: true },
-        size: { type: String, default: 'xs' }
+        size: { type: String }
       },
       template: '#glyphbutton-template'
     })
@@ -141,21 +177,13 @@
         manifests: []
       }},
       computed: {
-        tagfilterIsValid: function () {
-          try {
-            new RegExp(this.tagfilter)
-            return true
-          } catch (e) {
-            return false
-          }
-        },
         filteredManifests: function () {
-          if (!this.tagfilterIsValid) {
+          try {
+            var re = new RegExp(this.tagfilter)
+            return this.manifests.filter((m) => m.tags.some((t) => t.match(re)) )
+          } catch (e) {
             return []
           }
-
-          var re = new RegExp(this.tagfilter)
-          return this.manifests.filter((m) => { return m.tags.some((t) => Boolean(t.match(re))) })
         }
       },
       template: '#repository-template',
@@ -220,7 +248,18 @@
       el: '#app',
       data: {
         host: document.location.hostname,
-        repositories: []
+        repositories: [],
+        repositoryFilter: ''
+      },
+      computed: {
+        filteredRepositories: function () {
+          try {
+            var re = new RegExp(this.repositoryFilter)
+            return this.repositories.filter((r) => r.match(re))
+          } catch (e) {
+            return []
+          }
+        }
       },
       methods: {
         loadRepositories: function () {
