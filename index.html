@@ -189,6 +189,12 @@
         }
       },
       template: '#repository-template',
+      mounted: function () {
+        if (window.location.hash == '#' + this.repository) {
+          window.scroll(0, this.$el.offsetTop)
+          this.load()
+        }
+      },
       methods: {
         load: function () {
           this.manifests = []
