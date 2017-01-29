@@ -14,7 +14,7 @@ It used the following environment variables:
   - `RF_HOSTNAME` is the hostname used in Caddys configuration. If not set, Caddy will not fetch certificates and TLS will not be enabled.
   - `RF_REGISTRY_HOST` and `RF_REGISTRY_PORT` is the host and port where your docker registry can be reached by the proxy. These are required.
   
-The [docker-compose.yaml](docker-compose.yaml) of this project is used for development, but is also serves as an example of how to run a registry and a registryfront in docker.
+The [docker-compose.yaml](https://github.com/jaknu/registryfront/blob/master/docker-compose.yaml) of this project is used for development, but is also serves as an example of how to run a registry and a registryfront in docker.
 
 ## If you already have a reverse proxy for your registry
 
