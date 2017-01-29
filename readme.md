@@ -54,3 +54,8 @@ The registry front aims to be unopinionated and simple to deploy. This has resul
    To ensure that registryfront does not impose restrictions on or extended use of the docker registry, the only backend used is the [docker registry api](https://docs.docker.com/registry/spec/api/). This means that there is no extra metadata kept and no extra functionality that isn't present in the registry itself. It, again, also makes deployment of the registryfront simpler, since you don't have to run a server, other than the registry you are already running.
 
   It does rely on content from external cdns to help keep the code simpler.
+
+## Acknowlegements
+
+Registryfront uses [Bootstrap css](http://getbootstrap.com/), [Vue.js](https://vuejs.org/) and [Axios](http://getbootstrap.com/).
+The docker image runs [Caddy](https://caddyserver.com/) and is build on the [joshix/caddy](https://hub.docker.com/r/joshix/caddy/) image.
