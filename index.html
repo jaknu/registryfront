@@ -38,7 +38,7 @@
           <div class="col-xs-8 text-right">
             <form class="form-inline">
               <rf-filterinput v-if="loaded" v-model="tagfilter" icon="tag" size="xs"></rf-filterinput>
-              <rf-glyphbutton v-if="loaded" :click="load" icon="refresh" size="xs"></rf-glyphbutton>
+              <rf-glyphbutton v-if="loaded" :click="unfold" icon="refresh" size="xs"></rf-glyphbutton>
               <rf-glyphbutton :click="toggle" :icon="opened ? 'chevron-up' : 'chevron-down'" size="xs"></rf-glyphbutton>
             </form>
           </div>
@@ -47,7 +47,7 @@
       <div v-if="opened" class="list-group">
         <div v-if="!loaded" class="list-group-item"><rf-glyph icon="hourglass"></rf-glyph> Loading manifests</div>
         <div v-if="loaded && filteredManifests.length == 0" class="list-group-item"><rf-glyph icon="info-sign"></rf-glyph> Nothing to show</div>
-        <rf-manifest v-for="manifest in filteredManifests" :manifest="manifest" :repository="repository" v-on:deleted="load"></rf-manifest>
+        <rf-manifest v-for="manifest in filteredManifests" :manifest="manifest" :repository="repository" v-on:deleted="unfold"></rf-manifest>
       </div>
     </div>
   </script>
@@ -192,11 +192,11 @@
       mounted: function () {
         if (window.location.hash == '#' + this.repository) {
           window.scroll(0, this.$el.offsetTop)
-          this.load()
+          this.unfold()
         }
       },
       methods: {
-        load: function () {
+        unfold: function () {
           this.manifests = []
           this.loaded = false
           this.opened = true
@@ -232,16 +232,16 @@
             })
           })
         },
-        close: function () {
+        fold: function () {
           this.opened = false
           this.loaded = false
           this.manifests = []
         },
         toggle: function () {
           if (this.opened) {
-            this.close()
+            this.fold()
           } else {
-            this.load()
+            this.unfold()
           }
         }
       }
