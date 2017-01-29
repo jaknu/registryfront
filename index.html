@@ -23,12 +23,19 @@
           </form>
         </div>
       </div>
+      <rf-description></rf-description>
       <rf-repository  v-for='repository in filteredRepositories' :repository="repository"></rf-repository>
       <div v-if="filteredRepositories.length == 0" class="panel panel-default">
         <div class="panel-body"><rf-glyph icon="info-sign"></rf-glyph> No repositories</div>
       </div>
     </div>
   </body>
+
+  <script type="text/x-template" id="description-template">
+      <div v-if="html" class="panel panel-info">
+        <div class="panel-body" v-html="html"></div>
+      </div>
+  </script>
 
   <script type="text/x-template" id="repository-template">
     <div class="panel panel-default">
@@ -155,6 +162,18 @@
         }
       },
       template: '#warningglyphbutton-template'
+    })
+
+    Vue.component('rf-description', {
+      data: function () { return {
+        html: null
+      }},
+      template: '#description-template',
+      mounted: function () {
+        axios.get('/description.html').then((res) => {
+          this.html = res.data
+        }).catch((err) => {})
+      }
     })
 
     Vue.component('rf-manifest', {
