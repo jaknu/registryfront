@@ -197,6 +197,7 @@
       },
       methods: {
         unfold: function () {
+          window.location.href = '#' + this.repository
           this.manifests = []
           this.loaded = false
           this.opened = true
