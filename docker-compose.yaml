@@ -1,0 +1,11 @@
+version: '2'
+services:
+  registry:
+    image: registry:2
+  registryfront:
+    image: jaknu/registryfront
+    ports:
+      - 80:80
+    environment:
+      RF_REGISTRY_HOST: registry
+      RF_REGISTRY_PORT: 5000
