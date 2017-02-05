@@ -1,0 +1,9 @@
+sudo: required
+language: node_js
+services: 
+  - docker
+
+script:
+  - cd tests/with_empty_registry
+  - docker-compose run tester
+  - docker-compose down -v --rmi local
