@@ -93,7 +93,7 @@
   </script>
 
   <script type="text/x-template" id="glyphbutton-template">
-    <a v-on:click="click" :class="'btn btn-' + size + ' btn-' + look">
+    <a v-on:click="_click" :class="'btn btn-' + size + ' btn-' + look">
       <rf-glyph :icon="icon"></rf-glyph><slot></slot>
     </a>
   </script>
@@ -140,8 +140,11 @@
       props: {
         icon: { type: String, required: true },
         look: { type: String, default: 'default' },
-        click: { type: Function, required: true },
+        click: { type: Function },
         size: { type: String }
+      },
+      methods: {
+        _click: function () { if (this.click) { this.click() } }
       },
       template: '#glyphbutton-template'
     })
