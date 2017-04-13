@@ -1,9 +1,16 @@
+---
+# Docker-compose setup used for development.
+
 version: '2'
 services:
   registry:
     image: registry:2
+    environment:
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
   registryfront:
-    image: jaknu/registryfront
+    image: joshix/caddy
+    volumes:
+      - .:/var/www/html
     ports:
       - 80:80
     environment:

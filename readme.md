@@ -4,17 +4,33 @@ An unopinionated web frontend for use with a [self-hosted docker registry](https
 
 ## Using the docker image
 
-The fastest way to get going is using the image from dockerhub. For example like this:
-
-    docker run -p 80:80 -p 443:443 -e RF_REGISTRY_HOST=<registry host> -e RF_REGISTRY_PORT=<registry port> jaknu/registryfront
-
 The docker image runs [Caddy](https://caddyserver.com) to serve as a reverse proxy your registry and to serve the registryfront code.
 
-It used the following environment variables:
+It uses the following environment variables:
   - `RF_HOSTNAME` is the hostname used in Caddys configuration. If not set, Caddy will not fetch certificates and TLS will not be enabled.
   - `RF_REGISTRY_HOST` and `RF_REGISTRY_PORT` is the host and port where your docker registry can be reached by the proxy. These are required.
-  
-The [docker-compose.yaml](https://github.com/jaknu/registryfront/blob/master/docker-compose.yaml) of this project is used for development, but is also serves as an example of how to run a registry and a registryfront in docker.
+
+The fastest way to get going is using the image from dockerhub. For example like this:
+
+    docker run -p 80:80 -e RF_REGISTRY_HOST=<registry host> -e RF_REGISTRY_PORT=<registry port> jaknu/registryfront
+
+Or with a docker-compose file like this:
+    
+    version: '2'
+    services:
+      registry:
+        image: registry:2
+        environment:
+          REGISTRY_STORAGE_DELETE_ENABLED: "true"
+      front:
+        image: jaknu/registryfront
+        ports:
+          - 80:80
+        environment:
+          RF_REGISTRY_HOST: registry
+          RF_REGISTRY_PORT: 5000
+
+Note that the above examples doesn't expose port 443. If you want to have [Caddy setup TLS via letsencrypt](https://caddyserver.com/docs/automatic-https), expose port 443 in addition to port 80 and pass your hostname to the registryfront container in the `RF_HOSTNAME` environment variable.
 
 ## If you already have a reverse proxy for your registry
 
