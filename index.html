@@ -23,8 +23,15 @@
           </form>
         </div>
       </div>
+
       <rf-description></rf-description>
+
+      <div v-for="error in errors" class="alert alert-danger">
+        <b>{{ error.title }}:</b> {{ error.message }} <button v-on:click="dismissError(error)" class="close">&times</button>
+      </div>
+
       <rf-repository  v-for='repository in filteredRepositories' :repository="repository"></rf-repository>
+
       <div v-if="filteredRepositories.length == 0" class="panel panel-default">
         <div class="panel-body"><rf-glyph icon="info-sign"></rf-glyph> No repositories</div>
       </div>
@@ -170,9 +177,13 @@
       }},
       template: '#description-template',
       mounted: function () {
-        axios.get('/description.html').then((res) => {
+        axios.get(
+          '/description.html'
+        ).then((res) => {
           this.html = res.data
-        }).catch((err) => {})
+        }).catch((err) => { 
+          console.log('No description found. This is probably ok, unless you expected one to be there.')
+        })
       }
     })
 
@@ -181,8 +192,12 @@
       template: '#manifest-template',
       methods: {
         remove: function() {
-          axios.delete('/v2/' + this.repository + '/manifests/' + this.manifest.digest).then((res) => {
+          axios.delete(
+            '/v2/' + this.repository + '/manifests/' + this.manifest.digest
+          ).then((res) => {
             this.$emit('deleted')
+          }).catch((err) => { 
+            bus.$emit('error', {title: 'Failed to delete manifest for ' + this.repository, message: err.message}) 
           })
         }
       }
@@ -221,7 +236,9 @@
           this.loaded = false
           this.opened = true
           this.pendingRequests = 1
-          axios.get('/v2/' + this.repository + '/tags/list').then((res) => {
+          axios.get(
+            '/v2/' + this.repository + '/tags/list'
+          ).then((res) => {
             if (res.data.tags == null) {
               this.pendingRequests = 0
               this.loaded = true
@@ -230,12 +247,15 @@
             var manifestsByDigest = {}
             this.pendingRequests = res.data.tags.length
             res.data.tags.forEach((tag) => {
-              axios.get('/v2/' + this.repository + '/manifests/' + tag, {
-                headers: {
-                  'accept': 'application/vnd.docker.distribution.manifest.v2+json',
-                  'if-none-match': null
+              axios.get(
+                '/v2/' + this.repository + '/manifests/' + tag, 
+                {
+                  headers: {
+                    'accept': 'application/vnd.docker.distribution.manifest.v2+json',
+                    'if-none-match': null
+                  }
                 }
-              }).then((res) => {
+              ).then((res) => {
                 var digest = res.headers['docker-content-digest']
                 manifestsByDigest[digest] = manifestsByDigest[digest] || {
                   digest: digest,
@@ -248,8 +268,12 @@
                   for (digest in manifestsByDigest) { this.manifests.push(manifestsByDigest[digest]) }
                   this.loaded = true
                 }
+              }).catch((err) => {
+                bus.$emit('error', {title: 'Failed to load manifest for ' + this.repository + ':' + tag, message: err.message})
               })
             })
+          }).catch((err) => {
+            bus.$emit('error', {title: 'Failed to load tag list for ' + this.repository, message: err.message})
           })
         },
         fold: function () {
@@ -267,11 +291,14 @@
       }
     })
 
+    bus = new Vue()
+
     var app = new Vue({
       el: '#app',
       data: {
         host: document.location.hostname,
         repositories: [],
+        errors: [],
         repositoryFilter: ''
       },
       computed: {
@@ -284,11 +311,23 @@
           }
         }
       },
+      created: function () {
+        bus.$on('error', (err) => {
+          this.errors.push(err)
+        })
+      },
       methods: {
         loadRepositories: function () {
-          axios.get('/v2/_catalog').then((res) => {
-            this.repositories = res.data.repositories
+          axios.get(
+            '/v2/_catalog'
+          ).then((res) => {
+            this.repositories = res.data.repositories 
+          }).catch((err) => { 
+            bus.$emit('error', {title: 'Failed to load repository list', message: err.message}) 
           })
+        },
+        dismissError: function (err) {
+          this.errors.splice(this.errors.indexOf(err), 1)
         }
       }
     })
