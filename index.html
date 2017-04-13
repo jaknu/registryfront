@@ -53,6 +53,7 @@
             <form class="form-inline">
               <rf-filterinput v-if="loaded" v-model="tagfilter" icon="tag" size="xs"></rf-filterinput>
               <rf-glyphbutton v-if="loaded" :click="unfold" icon="refresh" size="xs"></rf-glyphbutton>
+              <rf-glyphbutton v-if="loaded" :href="'#' + repository" icon="link" size="xs"></rf-glyphbutton>
               <rf-glyphbutton :click="toggle" :icon="opened ? 'chevron-up' : 'chevron-down'" size="xs"></rf-glyphbutton>
             </form>
           </div>
@@ -234,7 +235,6 @@
       },
       methods: {
         unfold: function () {
-          window.location.href = '#' + this.repository
           this.manifests = []
           this.loaded = false
           this.opened = true
