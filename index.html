@@ -85,13 +85,13 @@
     <div class="list-group-item">
       <div class="row">
         <div class="left">
-          <rf-glyphbadge v-for="tag in manifest.tags" icon="tag">{{ tag }}</rf-glyphbadge>
+          <rf-glyphbadge v-for="tag in manifest.tags" icon="tag"> {{ tag }}</rf-glyphbadge>
         </div>
         <div class="right">
-          <rf-glyphbadge look="light" icon="download">{{ pullName }}</rf-glyphbadge>
-          <rf-glyphbadge look="light" icon="list">{{ manifest.layers.length }} layers</rf-glyphbadge>
-          <rf-glyphbadge look="light" icon="compressed">{{ manifest.size | bytestomb }} MB</rf-glyphbadge>
-          <rf-glyphbadge look="light" icon="barcode">{{ manifest.imageId }}</rf-glyphbadge>
+          <rf-glyphbadge look="light" icon="download"> {{ pullName }}</rf-glyphbadge>
+          <rf-glyphbadge look="light" icon="list"> {{ manifest.layers.length }} layers</rf-glyphbadge>
+          <rf-glyphbadge look="light" icon="compressed"> {{ manifest.size | bytestomb }} MB</rf-glyphbadge>
+          <rf-glyphbadge look="light" icon="barcode"> {{ manifest.imageId }}</rf-glyphbadge>
           <rf-warningglyphbutton :click="remove" look="danger" icon="erase" warning="Really remove this image?"></rf-warningglyphbutton>
         </div>
       </div>
