@@ -16,6 +16,8 @@
 
       .left { float: left; padding-left: 15px }
       .right { float: right; padding-right: 15px }
+
+      .badge-light { background-color: #f5f5f5; color: #777 }
     </style>
   </head>
 
@@ -86,10 +88,10 @@
           <span v-for="tag in manifest.tags" class="badge"><rf-glyph icon="tag"></rf-glyph> {{ tag }}</span>
         </div>
         <div class="right">
-          <rf-glyph icon="download"></rf-glyph> {{ pullName }}
-          <rf-glyph icon="list"></rf-glyph> {{ manifest.layers.length }} layers
-          <rf-glyph icon="compressed"></rf-glyph> {{ manifest.size | bytestomb }} MB
-          <rf-glyph icon="barcode"></rf-glyph> {{ manifest.imageId }}
+          <span class="badge badge-light"><rf-glyph icon="download"></rf-glyph> {{ pullName }}</span>
+          <span class="badge badge-light"><rf-glyph icon="list"></rf-glyph> {{ manifest.layers.length }} layers</span>
+          <span class="badge badge-light"><rf-glyph icon="compressed"></rf-glyph> {{ manifest.size | bytestomb }} MB</span>
+          <span class="badge badge-light"><rf-glyph icon="barcode"></rf-glyph> {{ manifest.imageId }}</span>
           <rf-warningglyphbutton :click="remove" look="danger" icon="erase" warning="Really remove this image?"></rf-warningglyphbutton>
         </div>
       </div>
