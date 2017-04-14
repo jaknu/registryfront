@@ -5,22 +5,33 @@
     <script src="https://unpkg.com/vue/dist/vue.min.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <style>
-      .navbar { margin-top: 20px }
+      .header { margin-top: 20px; background-color: #292b2c }
+      .header .left { color: #fff; font-size: 24px; line-height: 24px  }
+
       .input-group-xs input { font-size: 12px ; height: 24px }
       .input-group-xs.has-feedback input { padding-right: 30px }
       .input-group-xs .form-control-feedback { font-size: 12px ; color: #333 ; width: 24px ; height: 24px ; line-height: 2.2 }
+
+      .form-inline .input-group { display: inline-table; vertical-align: middle }
+
+      .left { float: left; padding-left: 15px }
+      .right { float: right; padding-right: 15px }
     </style>
   </head>
 
   <body>
     <div class="container" id='app'>
-      <div class="navbar navbar-default">
-        <div class="container-fluid">
-          <div class="navbar-header navbar-brand"><rf-glyph icon="book"></rf-glyph> {{ host }}</div>
-          <form class="navbar-form navbar-right">
-            <rf-filterinput v-model="repositoryFilter" icon="folder-close"></rf-filterinput>
-            <rf-glyphbutton :click="loadRepositories" icon="refresh"></rf-glyphbutton>
-          </form>
+      <div class="panel panel-default header">
+        <div class="panel-body row">
+          <div class="left">
+            <rf-glyph icon="book"></rf-glyph> {{ host }}
+          </div>
+          <div class="right">
+            <form class="form-inline">
+              <rf-filterinput v-model="repositoryFilter" icon="folder-close"></rf-filterinput>
+              <rf-glyphbutton :click="loadRepositories" icon="refresh"></rf-glyphbutton>
+            </form>
+          </div>
         </div>
       </div>
 
@@ -31,7 +42,6 @@
       </div>
 
       <rf-repository  v-for='repository in filteredRepositories' :repository="repository"></rf-repository>
-
       <div v-if="filteredRepositories.length == 0" class="panel panel-default">
         <div class="panel-body"><rf-glyph icon="info-sign"></rf-glyph> No repositories</div>
       </div>
@@ -46,10 +56,12 @@
 
   <script type="text/x-template" id="repository-template">
     <div class="panel panel-default">
-      <div class="panel-heading panel-title">
-        <div class="row">
-          <div class="col-xs-4"><rf-glyph :icon="opened ? 'folder-open' : 'folder-close'"></rf-glyph> {{ repository }}</div>
-          <div class="col-xs-8 text-right">
+      <div class="panel-heading">
+        <div class="panel-title row">
+          <div class="left">
+            <rf-glyph :icon="opened ? 'folder-open' : 'folder-close'"></rf-glyph> {{ repository }}
+          </div>
+          <div class="right">
             <form class="form-inline">
               <rf-filterinput v-if="loaded" v-model="tagfilter" icon="tag" size="xs"></rf-filterinput>
               <rf-glyphbutton v-if="loaded" :click="unfold" icon="refresh" size="xs"></rf-glyphbutton>
@@ -70,16 +82,12 @@
   <script type="text/x-template" id="manifest-template">
     <div class="list-group-item">
       <div class="row">
-        <div class="col-xs-4">
+        <div class="left">
           <span v-for="tag in manifest.tags" class="badge"><rf-glyph icon="tag"></rf-glyph> {{ tag }}</span>
         </div>
-        <div class="col-xs-2">
+        <div class="right">
           <rf-glyph icon="list"></rf-glyph> {{ manifest.layers.length }} layers
-        </div>
-        <div class="col-xs-2">
           <rf-glyph icon="compressed"></rf-glyph> {{ manifest.size | bytestomb }} MB
-        </div>
-        <div class="col-xs-4 text-right">
           <rf-warningglyphbutton :click="remove" look="danger" icon="erase" warning="Really remove this image?"></rf-warningglyphbutton>
         </div>
       </div>
