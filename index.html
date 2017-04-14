@@ -86,6 +86,7 @@
           <span v-for="tag in manifest.tags" class="badge"><rf-glyph icon="tag"></rf-glyph> {{ tag }}</span>
         </div>
         <div class="right">
+          <rf-glyph icon="download"></rf-glyph> {{ pullName }}
           <rf-glyph icon="list"></rf-glyph> {{ manifest.layers.length }} layers
           <rf-glyph icon="compressed"></rf-glyph> {{ manifest.size | bytestomb }} MB
           <rf-warningglyphbutton :click="remove" look="danger" icon="erase" warning="Really remove this image?"></rf-warningglyphbutton>
@@ -202,6 +203,11 @@
     Vue.component('rf-manifest', {
       props: ['manifest', 'repository'],
       template: '#manifest-template',
+      computed: {
+        pullName: function () {
+          return window.location.href.split('#')[0] + this.repository + ':' + this.manifest.tags[0]
+        }
+      },
       methods: {
         remove: function() {
           axios.delete(
