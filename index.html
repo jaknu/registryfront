@@ -89,6 +89,7 @@
           <rf-glyph icon="download"></rf-glyph> {{ pullName }}
           <rf-glyph icon="list"></rf-glyph> {{ manifest.layers.length }} layers
           <rf-glyph icon="compressed"></rf-glyph> {{ manifest.size | bytestomb }} MB
+          <rf-glyph icon="barcode"></rf-glyph> {{ manifest.imageId }}
           <rf-warningglyphbutton :click="remove" look="danger" icon="erase" warning="Really remove this image?"></rf-warningglyphbutton>
         </div>
       </div>
@@ -215,7 +216,7 @@
           ).then((res) => {
             this.$emit('deleted')
           }).catch((err) => { 
-            bus.$emit('error', {title: 'Failed to delete manifest for ' + this.repository, message: err.message}) 
+            bus.$emit('error', {title: 'Failed to delete manifest for ' + this.manifest.imageId, message: err.message})
           })
         }
       }
@@ -275,6 +276,7 @@
               ).then((res) => {
                 var digest = res.headers['docker-content-digest']
                 manifestsByDigest[digest] = manifestsByDigest[digest] || {
+                  imageId: res.data.config.digest.substr(7, 12),
                   digest: digest,
                   tags: [],
                   layers: res.data.layers,
