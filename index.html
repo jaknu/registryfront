@@ -85,13 +85,13 @@
     <div class="list-group-item">
       <div class="row">
         <div class="left">
-          <span v-for="tag in manifest.tags" class="badge"><rf-glyph icon="tag"></rf-glyph> {{ tag }}</span>
+          <rf-glyphbadge v-for="tag in manifest.tags" icon="tag">{{ tag }}</rf-glyphbadge>
         </div>
         <div class="right">
-          <span class="badge badge-light"><rf-glyph icon="download"></rf-glyph> {{ pullName }}</span>
-          <span class="badge badge-light"><rf-glyph icon="list"></rf-glyph> {{ manifest.layers.length }} layers</span>
-          <span class="badge badge-light"><rf-glyph icon="compressed"></rf-glyph> {{ manifest.size | bytestomb }} MB</span>
-          <span class="badge badge-light"><rf-glyph icon="barcode"></rf-glyph> {{ manifest.imageId }}</span>
+          <rf-glyphbadge look="light" icon="download">{{ pullName }}</rf-glyphbadge>
+          <rf-glyphbadge look="light" icon="list">{{ manifest.layers.length }} layers</rf-glyphbadge>
+          <rf-glyphbadge look="light" icon="compressed">{{ manifest.size | bytestomb }} MB</rf-glyphbadge>
+          <rf-glyphbadge look="light" icon="barcode">{{ manifest.imageId }}</rf-glyphbadge>
           <rf-warningglyphbutton :click="remove" look="danger" icon="erase" warning="Really remove this image?"></rf-warningglyphbutton>
         </div>
       </div>
@@ -117,6 +117,12 @@
       <rf-glyphbutton v-if="requested" :click="confirm" icon="ok" :look="look" size="xs"></rf-glyphbutton>
       <rf-glyphbutton v-if="requested" :click="cancel" icon="remove" :look="look" size="xs"></rf-glyphbutton>
       <rf-glyphbutton v-if="!requested" :click="request" :icon="icon" :look="look" size="xs"></rf-glyphbutton>
+    </span>
+  </script>
+
+  <script type="text/x-template" id="glyphbadge-template">
+    <span :class="'badge badge-' + look">
+      <rf-glyph :icon="icon"></rf-glyph><slot></slot>
     </span>
   </script>
 
@@ -185,6 +191,14 @@
         }
       },
       template: '#warningglyphbutton-template'
+    })
+
+    Vue.component('rf-glyphbadge', {
+      props: {
+        icon: { type: String, required: true },
+        look: { type: String, default: 'default' }
+      },
+      template: '#glyphbadge-template'
     })
 
     Vue.component('rf-description', {
