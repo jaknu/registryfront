@@ -1,0 +1,23 @@
+---
+
+# Ansible playbook for destroying a Digital Ocean droplet created using the setup.yml playbook.
+
+- hosts: localhost
+  tasks:
+
+    - assert:
+        that: 
+          - "'DO_API_TOKEN' in ansible_env"
+        msg: "The environment variable DO_API_TOKEN must be set to your Digital Ocean API token."
+
+    - name: Include vars
+      include_vars: 
+        file: droplet_vars.yml
+        name: droplet
+    
+    - name: Destroy Digital Ocean droplet
+      digital_ocean:
+        command: droplet
+        name: "{{ droplet.name }}"
+        unique_name: yes
+        state: deleted

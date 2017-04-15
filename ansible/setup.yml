@@ -1,0 +1,105 @@
+---
+
+# Ansible playbook for setup of a Digital Ocean droplet running docker registry and frontend in docker.
+
+- hosts: localhost
+  tasks:
+
+    - assert:
+        that: 
+          - "'DO_API_TOKEN' in ansible_env"
+        msg: "The environment variable DO_API_TOKEN must be set to your Digital Ocean API token."
+
+    - name: Include vars
+      include_vars: 
+        file: droplet_vars.yml
+        name: droplet
+    
+    - name: Setup Digital Ocean ssh key
+      digital_ocean:
+        command: ssh
+        name: "ansible_{{ ansible_nodename }}"
+        state: present
+        ssh_pub_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+      register: ssh
+    
+    - name: Setup Digital Ocean droplet
+      digital_ocean:
+        command: droplet
+        name: "{{ droplet.name }}"
+        state: present
+        unique_name: yes
+        size_id: "{{ droplet.size_id }}"
+        region_id: "{{ droplet.region_id }}"
+        image_id: "{{ droplet.image_id }}"
+        ssh_key_ids: "{{ ssh.ssh_key.id }}"
+      register: droplet
+    
+    - name: Add droplet to playbook inventory
+      add_host:
+        name: "{{ droplet.droplet.ip_address }}"
+        groups: docker-registries
+
+- hosts: docker-registries
+  remote_user: root
+  gather_facts: no
+  pre_tasks:
+
+    - name: Wait for SSH to accept connections
+      local_action: "wait_for port=22 host={{ inventory_hostname }}"
+
+    - name: Install python2 and python-docker
+      raw: apt-get update && apt-get -y install python-docker
+
+    - setup:
+
+  tasks:
+
+    - name: Install docker apt repository for fetching docker-ce
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu xenial stable
+        state: present
+
+    - name: Install docker gpg key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Install docker-ce
+      apt:
+        name: docker-ce
+        state: present
+        update_cache: yes
+
+    - name: Create docker network for registry
+      docker_network:
+        name: registry
+
+    - name: Run a registry container
+      docker_container:
+        name: registry
+        image: registry:2
+        state: started
+        restart_policy: unless-stopped
+        env:
+          REGISTRY_STORAGE_DELETE_ENABLED: "true"
+        volumes:
+          - "/data:/var/lib/registry"
+        networks:
+          - name: registry
+
+    - name: Run a registryfront container
+      docker_container:
+        name: registryfront
+        image: jaknu/registryfront
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: registry
+        env:
+          RF_REGISTRY_HOST: registry
+          RF_REGISTRY_PORT: 5000
+        ports:
+          - "80:80"
+          - "443:443"
+
