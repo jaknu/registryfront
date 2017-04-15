@@ -1,6 +1,10 @@
 # Registryfront
 
-An unopinionated web frontend for use with a [self-hosted docker registry](https://docs.docker.com/registry/).
+A minimalist web frontend for use with a [self-hosted docker registry](https://docs.docker.com/registry/). It aims to be unopinionated and simple to deploy.
+
+It is contained in a single html file and does not require any server-side compilation. This is primarily to keep it as simple as possible to deploy. All that is required to use the registryfront is serving up `index.html` at the address of your registry. Look below for examples taking advantage of this.
+
+Registryfront does not rely on any other backend than the docker registry itself. It does not impose restrictions on or extends the functionality of the docker registry. The only backend used is the [docker registry api](https://docs.docker.com/registry/spec/api/). This means that there is no extra metadata kept and no extra functionality that isn't present in the registry itself. It, again, also makes deployment of the registryfront simpler, since you don't have to run a server, other than the registry you are already running. It does rely on content from external cdns to help keep the code simpler.
 
 ## Using the docker image
 
@@ -63,7 +67,7 @@ The code attempts to load `/config.json` and read your configuration from it. Th
 
   - `description`: Description of the registry to display below the header. HTML is supported. By default, no description is shown.
   - `showRemove`: Boolean indicating whether or not a remove button should be shown for each manifest. By default, no button is shown. See also [the docker documentation on registry configuration](https://docs.docker.com/registry/configuration/#delete).
-  - `repositoryColors`: Map of colors to use for the headers of repository panels. Keys should be regular expressions matched against repository names and values should be color values understood by CSS. See below for an example.
+  - `repositoryColors`: Map of colors to use for the headers of repository panels. Keys should be regular expressions matched against repository names and values should be color values understood by CSS.
 
 For example a `config.json` used for a registry shared by two teams could look like this:
 
@@ -75,20 +79,6 @@ For example a `config.json` used for a registry shared by two teams could look l
         "^bar/": "#ffe"
       }
     }
-
-## Design goals
-
-The registry front aims to be unopinionated and simple to deploy. This has resulted in the following dogma:
-
-1. **The registryfront code should be contained in a single html file and not require any server-side compilation**
-
-   This is primarily to keep it as simple as possible to deploy. All that is required to use the registryfront is serving up `index.html` at the address of your registry. Look above for examples taking advantage of this.
-
-2. **The registryfront should not rely on any other backend than the docker registry itself**
-
-   To ensure that registryfront does not impose restrictions on or extended use of the docker registry, the only backend used is the [docker registry api](https://docs.docker.com/registry/spec/api/). This means that there is no extra metadata kept and no extra functionality that isn't present in the registry itself. It, again, also makes deployment of the registryfront simpler, since you don't have to run a server, other than the registry you are already running.
-
-  It does rely on content from external cdns to help keep the code simpler.
 
 ## Acknowlegements
 
