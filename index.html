@@ -37,7 +37,9 @@
         </div>
       </div>
 
-      <rf-description></rf-description>
+      <div v-if="config.description" class="panel panel-info">
+        <div class="panel-body" v-html="config.description"></div>
+      </div>
 
       <div v-for="error in errors" class="alert alert-danger">
         <b>{{ error.title }}:</b> {{ error.message }} <button v-on:click="dismissError(error)" class="close">&times</button>
@@ -49,12 +51,6 @@
       </div>
     </div>
   </body>
-
-  <script type="text/x-template" id="description-template">
-      <div v-if="html" class="panel panel-info">
-        <div class="panel-body" v-html="html"></div>
-      </div>
-  </script>
 
   <script type="text/x-template" id="repository-template">
     <div class="panel panel-default">
@@ -201,22 +197,6 @@
       template: '#glyphbadge-template'
     })
 
-    Vue.component('rf-description', {
-      data: function () { return {
-        html: null
-      }},
-      template: '#description-template',
-      mounted: function () {
-        axios.get(
-          '/description.html'
-        ).then((res) => {
-          this.html = res.data
-        }).catch((err) => { 
-          console.log('No description found. This is probably ok, unless you expected one to be there.')
-        })
-      }
-    })
-
     Vue.component('rf-manifest', {
       props: ['manifest', 'repository'],
       template: '#manifest-template',
@@ -334,6 +314,7 @@
         host: document.location.hostname,
         repositories: [],
         errors: [],
+        config: {},
         repositoryFilter: ''
       },
       computed: {
@@ -349,6 +330,14 @@
       created: function () {
         bus.$on('error', (err) => {
           this.errors.push(err)
+        })
+
+        axios.get(
+          '/config.json'
+        ).then((res) => {
+          this.config = res.data
+        }).catch((err) => {
+          console.log('No config.json found. This is ok, unless you expected one to be there.')
         })
       },
       methods: {
