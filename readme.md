@@ -57,6 +57,25 @@ and point `/` at it by adding this location to the above server block:
     
 You can use the Docker setup in this repository as an example of doing the same with [Caddy](https://caddyserver.com/).
 
+## Configuration
+
+The code attempts to load `/config.json` and read your configuration from it. The following configuration keys are supported:
+
+  - `description`: Description of the registry to display below the header. HTML is supported. By default, no description is shown.
+  - `showRemove`: Boolean indicating whether or not a remove button should be shown for each manifest. By default, no button is shown. See also [the docker documentation on registry configuration](https://docs.docker.com/registry/configuration/#delete).
+  - `repositoryColors`: Map of colors to use for the headers of repository panels. Keys should be regular expressions matched against repository names and values should be color values understood by CSS. See below for an example.
+
+For example a `config.json` used for a registry shared by two teams could look like this:
+
+    {
+      "description": "Shared registry of the <b>foo</b> and <b>bar</b> teams.",
+      "showRemove": true,
+      "repositoryColors": {
+        "^foo/": "#eef",
+        "^bar/": "#ffe"
+      }
+    }
+
 ## Design goals
 
 The registry front aims to be unopinionated and simple to deploy. This has resulted in the following dogma:
