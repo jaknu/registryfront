@@ -352,14 +352,27 @@
         })
       },
       methods: {
-        loadRepositories: function () {
+        walkRepositories : function (url, repos, cb) {
           axios.get(
-            '/v2/_catalog'
+            url
           ).then((res) => {
-            this.repositories = res.data.repositories 
+            repos.push.apply(repos, res.data.repositories);
+            if ("link" in res.headers) {
+              var link = res.headers["link"];
+              link = link.split(">")[0].split("<")[1]; // The link is packed in <the-link> brackets, remove them
+              this.walkRepositories(link, repos, cb);
+            } else {
+              cb(repos);
+            }
           }).catch((err) => { 
             bus.$emit('error', {title: 'Failed to load repository list', message: err.message}) 
           })
+        },
+
+        loadRepositories: function () {
+          this.walkRepositories('/v2/_catalog', [], (repos) => {
+            this.repositories = repos;
+          });
         },
         dismissError: function (err) {
           this.errors.splice(this.errors.indexOf(err), 1)
