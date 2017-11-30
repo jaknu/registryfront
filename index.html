@@ -353,13 +353,25 @@
       },
       methods: {
         loadRepositories: function () {
-          axios.get(
-            '/v2/_catalog'
-          ).then((res) => {
-            this.repositories = res.data.repositories 
-          }).catch((err) => { 
-            bus.$emit('error', {title: 'Failed to load repository list', message: err.message}) 
-          })
+          var walkRepositories = function (url, repos, cb) {
+            axios.get(
+              url
+            ).then((res) => {
+              repos.push.apply(repos, res.data.repositories);
+              if ("link" in res.headers) {
+                var link = res.headers["link"];
+                link = link.split(">")[0].split("<")[1]; // The link is packed in <the-link> brackets, remove them
+                walkRepositories(link, repos, cb);
+              } else {
+                cb(repos);
+              }
+            }).catch((err) => {
+              bus.$emit('error', {title: 'Failed to load repository list', message: err.message})
+            })
+          }
+          walkRepositories('/v2/_catalog', [], (repos) => {
+            this.repositories = repos;
+          });
         },
         dismissError: function (err) {
           this.errors.splice(this.errors.indexOf(err), 1)
