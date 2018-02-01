@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <link rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css">
-    <script src="https://unpkg.com/vue/dist/vue.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap@3/dist/css/bootstrap.min.css">
+    <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <style>
       .header { margin-top: 20px; background-color: #292b2c }
@@ -41,11 +41,11 @@
         <div class="panel-body" v-html="config.description"></div>
       </div>
 
-      <div v-for="error in errors" class="alert alert-danger">
+      <div v-for="error in errors" :key="error" class="alert alert-danger">
         <b>{{ error.title }}:</b> {{ error.message }} <button v-on:click="dismissError(error)" class="close">&times</button>
       </div>
 
-      <rf-repository  v-for='repository in filteredRepositories' :repository="repository" :color="repositoryColor(repository)" :showremove="showremove"></rf-repository>
+      <rf-repository  v-for='repository in filteredRepositories' :key='repository' :repository="repository" :color="repositoryColor(repository)" :showremove="showremove"></rf-repository>
       <div v-if="filteredRepositories.length == 0" class="panel panel-default">
         <div class="panel-body"><rf-glyph icon="info-sign"></rf-glyph> No repositories</div>
       </div>
@@ -72,7 +72,7 @@
       <div v-if="opened" class="list-group">
         <div v-if="!loaded" class="list-group-item"><rf-glyph icon="hourglass"></rf-glyph> Loading manifests</div>
         <div v-if="loaded && filteredManifests.length == 0" class="list-group-item"><rf-glyph icon="info-sign"></rf-glyph> Nothing to show</div>
-        <rf-manifest v-for="manifest in filteredManifests" :manifest="manifest" :repository="repository" v-on:deleted="unfold" :showremove="showremove"></rf-manifest>
+        <rf-manifest v-for="manifest in filteredManifests" :key="manifest.digest" :manifest="manifest" :repository="repository" v-on:deleted="unfold" :showremove="showremove"></rf-manifest>
       </div>
     </div>
   </script>
@@ -81,7 +81,7 @@
     <div class="list-group-item">
       <div class="row">
         <div class="left">
-          <rf-glyphbadge v-for="tag in manifest.tags" icon="tag"> {{ tag }}</rf-glyphbadge>
+          <rf-glyphbadge v-for="tag in manifest.tags" :key="tag" icon="tag"> {{ tag }}</rf-glyphbadge>
         </div>
         <div class="right">
           <rf-glyphbadge look="light" icon="download"> {{ pullName }}</rf-glyphbadge>
@@ -106,7 +106,7 @@
       <rf-glyph :icon="icon"></rf-glyph><slot></slot>
     </a>
   </script>
- 
+
   <script type="text/x-template" id="warningglyphbutton-template">
     <span>
       <div v-if="requested" :class="'label label-' + look"><rf-glyph icon :icon="icon"></rf-glyph> {{ warning }}</div>
@@ -176,7 +176,7 @@
       }},
       methods: {
         request: function () {
-          this.requested = true 
+          this.requested = true
         },
         confirm: function () {
           this.click()
@@ -215,7 +215,7 @@
             '/v2/' + this.repository + '/manifests/' + this.manifest.digest
           ).then((res) => {
             this.$emit('deleted')
-          }).catch((err) => { 
+          }).catch((err) => {
             bus.$emit('error', {title: 'Failed to delete manifest for ' + this.manifest.imageId, message: err.message})
           })
         }
@@ -270,7 +270,7 @@
             this.pendingRequests = res.data.tags.length
             res.data.tags.forEach((tag) => {
               axios.get(
-                '/v2/' + this.repository + '/manifests/' + tag, 
+                '/v2/' + this.repository + '/manifests/' + tag,
                 {
                   headers: {
                     'accept': 'application/vnd.docker.distribution.manifest.v2+json',
